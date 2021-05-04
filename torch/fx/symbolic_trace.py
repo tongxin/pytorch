@@ -432,7 +432,14 @@ class Tracer(TracerBase):
 
         self.submodule_paths = None
 
-        return self.graph
+        # Since the tracer might be packaged along with a GraphModule that it helped generate, and that
+        # graphs are explicilty not saved, set self.graph to None so that it doesn't get packaged
+        # along with the tracer.
+        graph = self.graph
+        graph.tracer = self
+        self.graph = None
+
+        return graph
 
 
 # List of pairs of (global dict, function name) functions

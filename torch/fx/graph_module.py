@@ -95,17 +95,24 @@ def _deserialize_graph_module(forward, body: Dict[Any, Any], importer: Optional[
 
     # Try to retrieve the forward source in a backward-compatible way
     CodeOnlyModule.forward = forward
-
-    from .symbolic_trace import Tracer
-
-    # we shouldn't trace into any of the submodules, they were not
-    # because they were not traced in the original GraphModule
-    class KeepModules(Tracer):
-        def is_leaf_module(self, _: torch.nn.Module, __: str) -> bool:
-            return True
-
     com = CodeOnlyModule(body)
-    return GraphModule(com, KeepModules().trace(com))
+
+    if 'tracer' not in body:
+        # For backwards compatibility with GraphModules that have been serialized and stored.
+        from .symbolic_trace import Tracer
+
+        # we shouldn't trace into any of the submodules, they were not
+        # because they were not traced in the original GraphModule
+        class KeepModules(Tracer):
+            def is_leaf_module(self, _: torch.nn.Module, __: str) -> bool:
+                return True
+
+        graph = KeepModules().trace(com)
+    else:
+        graph = body['tracer'].trace(com)
+        del body['tracer']
+
+    return GraphModule(com, graph)
 
 # copy an attribute value with qualified name 'target' from 'from_module' to 'to_module'
 # This installs empty Modules where none exist yet if they are subpaths of target
@@ -233,6 +240,9 @@ class GraphModule(torch.nn.Module):
             raise RuntimeError('Unsupported type ' + str(root) + ' passed for root!')
 
         self.graph = graph
+
+        if hasattr(self.graph, 'tracer'):
+            self.tracer = self.graph.tracer
 
     # TorchScript breaks trying to compile the graph setter because of the
     # continued string literal. Issue here: https://github.com/pytorch/pytorch/issues/44842
