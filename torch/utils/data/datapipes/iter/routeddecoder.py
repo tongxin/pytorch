@@ -3,7 +3,7 @@ from typing import Any, Callable, Iterable, Iterator, Sized, Tuple
 
 from torch.utils.data import IterDataPipe, functional_datapipe
 from torch.utils.data.datapipes.utils.decoder import (
-    Decoder,
+    Handler, Decoder,
     basichandlers as decoder_basichandlers,
     imagehandler as decoder_imagehandler,
     _default_key_fn)
@@ -26,15 +26,15 @@ class RoutedDecoderIterDataPipe(IterDataPipe[Tuple[str, Any]]):
 
     def __init__(self,
                  datapipe: Iterable[Tuple[str, BufferedIOBase]],
-                 *handlers: Callable,
+                 *handler: Handler,
                  key_fn: Callable = _default_key_fn) -> None:
         super().__init__()
         self.datapipe: Iterable[Tuple[str, BufferedIOBase]] = datapipe
-        if not handlers:
-            handlers = (decoder_basichandlers, decoder_imagehandler('torch'))
-        self.decoder = Decoder(*handlers, key_fn=key_fn)
+        if not handler:
+            handler = (*decoder_basichandlers, decoder_imagehandler('torch'))
+        self.decoder = Decoder(*handler, key_fn=key_fn)
 
-    def add_handler(self, *handler: Callable) -> None:
+    def add_handler(self, *handler: Handler) -> None:
         self.decoder.add_handler(*handler)
 
     def __iter__(self) -> Iterator[Tuple[str, Any]]:

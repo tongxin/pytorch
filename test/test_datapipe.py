@@ -195,7 +195,7 @@ class TestIterableDataPipeBasic(TestCase):
                     self.assertTrue(rec[1] == open(rec[0], 'rb').read().decode('utf-8'))
 
         datapipe3 = dp.iter.RoutedDecoder(datapipe2, decoder_imagehandler('rgb'))
-        datapipe3.add_handler(decoder_basichandlers)
+        datapipe3.add_handler(*decoder_basichandlers)
         _helper(datapipe3)
 
         datapipe4 = dp.iter.RoutedDecoder(datapipe2)
