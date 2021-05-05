@@ -344,10 +344,23 @@ Tensor real(const Tensor& self) {
   }
 }
 
+Tensor neg_view(const Tensor& self) {
+  Tensor self_;
+  auto impl = c10::make_intrusive<TensorImpl>(
+    Storage(self.storage()), self.key_set(), self.dtype());
+  impl->set_storage_offset(self.storage_offset());
+  impl->set_sizes_and_strides(self.sizes(), self.strides());
+  impl->set_neg(!self.is_neg());
+  self_ = Tensor(std::move(impl));
+  namedinference::propagate_names(self_, self);
+  return self_;
+}
+
 Tensor imag(const Tensor& self) {
   if (self.is_complex()) {
-    auto real_tensor = at::view_as_real(self);
-    return at::select(real_tensor, real_tensor.dim() - 1, 1);
+    auto real_tensor = at::view_as_real_physical(self);
+    auto true_real_tensor = self.is_conj() ? at::neg_view(real_tensor) : real_tensor;
+    return at::select(true_real_tensor, real_tensor.dim() - 1, 1);
   } else {
     TORCH_CHECK(false, "imag is not implemented for tensors with non-complex dtypes.");
   }
@@ -374,10 +387,23 @@ Tensor& conj_physical_(Tensor& self) {
   return unary_op_impl_out(self, self, conj_physical_stub);
 }
 
-Tensor _resolve_conj(const Tensor& self) {
+Tensor _resolve_conj_neg(const Tensor& self) {
   auto result = at::empty_like(self, self.options());
-  // conjugation is handled in `copy_()`
+  // conjugation and negation are handled in `copy_()`
   return result.copy_(self);
+}
+
+// No op if the neg bit is not set
+// else returns a new negated tensor with neg bit set to 0
+Tensor resolve_neg(const Tensor& self) {
+  if (!self.is_neg()) { return self; }
+  return at::_resolve_conj(self);
+}
+
+Tensor resolve_neg_(const Tensor& self) {
+  if (!self.is_neg()) { return self; }
+  self.set_neg(false);
+  return self.neg_();
 }
 
 Tensor resolve_conj(const Tensor& self) {
@@ -558,6 +584,13 @@ Tensor& fix_(Tensor& self) { return self.trunc_(); }
 Tensor positive(const Tensor& self) {
   TORCH_CHECK(self.scalar_type() != kBool, "The `+` operator, on a bool tensor is not supported.");
   return self;
+}
+
+// No op if the neg bit is not set
+Tensor& resolve_neg_(Tensor& self) {
+  if (!self.is_neg()) { return self; }
+  self.set_neg(false);
+  return unary_op_impl_(self, at::neg_out);
 }
 
 Tensor& negative_out(const Tensor& self, Tensor& result) { return at::neg_out(result, self); }

@@ -329,13 +329,21 @@
   dispatch:
     CompositeExplicitAutograd: conj_physical_
 
-- func: _resolve_conj(Tensor(a) self) -> Tensor(a)
+- func: _resolve_conj_neg(Tensor(a) self) -> Tensor(a)
   variants: function, method
   dispatch:
-    CompositeExplicitAutograd: _resolve_conj
+    CompositeExplicitAutograd: _resolve_conj_neg
 
 - func: resolve_conj(Tensor(a) self) -> Tensor(a)
   variants: function, method
+
+- func: resolve_neg(Tensor(a) self) -> Tensor(a)
+  variants: function, method
+
+- func: neg_view(Tensor(a) self) -> Tensor(a)
+  variants: function, method
+  dispatch:
+    CompositeExplicitAutograd: neg
 
 - func: acos(Tensor self) -> Tensor
   device_check: NoCheck   # TensorIterator
@@ -2224,6 +2232,11 @@
   manual_cpp_binding: True
 
 - func: is_conj(Tensor self) -> bool
+  variants: function, method
+  device_guard: False
+  manual_cpp_binding: True
+
+- func: is_neg(Tensor self) -> bool
   variants: function, method
   device_guard: False
   manual_cpp_binding: True
