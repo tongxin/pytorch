@@ -1033,6 +1033,16 @@ class TestQuantizeFx(QuantizationTestCase):
             self.assertFalse(hasattr(module, 'qconfig'),
                              'qconfig is not removed for ' + name)
 
+    def test_return_none(self):
+        class M(torch.nn.Module):
+            def forward(self, x):
+                pass
+
+        m = M().eval()
+        qconfig_dict = {'': torch.quantization.default_qconfig}
+        m = prepare_fx(m, qconfig_dict)
+        m = convert_fx(m)
+
     def test_default_quant_after_none_qconfig(self):
         """ Make sure default quant is inserted properly"""
         class M(torch.nn.Module):
@@ -1104,8 +1114,10 @@ class TestQuantizeFx(QuantizationTestCase):
         # the first transpose is not quantized because the input is not quantized
         node_list2 = [
             ns.call_module(nn.Conv2d),
-            ns.call_function(torch.quantize_per_tensor),
+            # TODO(before land): verify that this change is ok
+            # ns.call_function(torch.quantize_per_tensor),
             ns.call_method("transpose"),
+            ns.call_function(torch.quantize_per_tensor),
             ns.call_module(nnq.Conv2d),
             ns.call_method("transpose"),
             ns.call_method("dequantize"),
@@ -3931,9 +3943,11 @@ class TestQuantizeFxOps(QuantizationTestCase):
             ]
         }
         m = prepare_fx(m, qconfig_dict)
+        print(m)
         expected_occurrence = {
             # input and weight of first and second linear, output of first and second linear
             ns.call_module(torch.quantization.MinMaxObserver): 6,
+            # ns.call_module(torch.quantization.MinMaxObserver): 5,
         }
         self.checkGraphModuleNodes(
             m,
@@ -3941,9 +3955,12 @@ class TestQuantizeFxOps(QuantizationTestCase):
         )
         # make sure it runs
         m = convert_fx(m)
+        print(m)
         expected_occurrence = {
             ns.call_function(torch.quantize_per_tensor): 2,
+            # ns.call_function(torch.quantize_per_tensor): 1,
             ns.call_method("dequantize"): 2,
+            # ns.call_method("dequantize"): 1,
             ns.call_method("to"): 1,
             ns.call_function(torch.ops.quantized.linear): 2
         }
