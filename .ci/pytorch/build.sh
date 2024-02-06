@@ -9,7 +9,7 @@ set -ex
 # shellcheck source=./common.sh
 source "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 # shellcheck source=./common-build.sh
-source "$(dirname "${BASH_SOURCE[0]}")/common-build.sh"
+# source "$(dirname "${BASH_SOURCE[0]}")/common-build.sh"
 
 if [[ "$BUILD_ENVIRONMENT" == *-mobile-*build* ]]; then
   exec "$(dirname "${BASH_SOURCE[0]}")/build-mobile.sh" "$@"
@@ -166,20 +166,6 @@ if [[ "$BUILD_ENVIRONMENT" == *rocm* ]]; then
   python tools/amd_build/build_amd.py
 fi
 
-if [[ "$BUILD_ENVIRONMENT" == *xpu* ]]; then
-  # shellcheck disable=SC1091
-  source /opt/intel/oneapi/compiler/latest/env/vars.sh
-  export USE_XPU=1
-fi
-
-# sccache will fail for CUDA builds if all cores are used for compiling
-# gcc 7 with sccache seems to have intermittent OOM issue if all cores are used
-if [ -z "$MAX_JOBS" ]; then
-  if { [[ "$BUILD_ENVIRONMENT" == *cuda* ]] || [[ "$BUILD_ENVIRONMENT" == *gcc7* ]]; } && which sccache > /dev/null; then
-    export MAX_JOBS=$(($(nproc) - 1))
-  fi
-fi
-
 # TORCH_CUDA_ARCH_LIST must be passed from an environment variable
 if [[ "$BUILD_ENVIRONMENT" == *cuda* && -z "$TORCH_CUDA_ARCH_LIST" ]]; then
   echo "TORCH_CUDA_ARCH_LIST must be defined"
@@ -293,21 +279,6 @@ else
       cp build/.ninja_log dist
     fi
 
-    if [[ "$BUILD_ENVIRONMENT" == *rocm* ]]; then
-      # remove sccache wrappers post-build; runtime compilation of MIOpen kernels does not yet fully support them
-      sudo rm -f /opt/cache/bin/cc
-      sudo rm -f /opt/cache/bin/c++
-      sudo rm -f /opt/cache/bin/gcc
-      sudo rm -f /opt/cache/bin/g++
-      pushd /opt/rocm/llvm/bin
-      if [[ -d original ]]; then
-        sudo mv original/clang .
-        sudo mv original/clang++ .
-      fi
-      sudo rm -rf original
-      popd
-    fi
-
     CUSTOM_TEST_ARTIFACT_BUILD_DIR=${CUSTOM_TEST_ARTIFACT_BUILD_DIR:-"build/custom_test_artifacts"}
     CUSTOM_TEST_USE_ROCM=$([[ "$BUILD_ENVIRONMENT" == *rocm* ]] && echo "ON" || echo "OFF")
     CUSTOM_TEST_MODULE_PATH="${PWD}/cmake/public"
@@ -354,12 +325,6 @@ else
     # Test no-Python build
     echo "Building libtorch"
 
-    # This is an attempt to mitigate flaky libtorch build OOM error. By default, the build parallelization
-    # is set to be the number of CPU minus 2. So, let's try a more conservative value here. A 4xlarge has
-    # 16 CPUs
-    MAX_JOBS=$(nproc --ignore=4)
-    export MAX_JOBS
-
     # NB: Install outside of source directory (at the same level as the root
     # pytorch folder) so that it doesn't get cleaned away prior to docker push.
     BUILD_LIBTORCH_PY=$PWD/tools/build_libtorch.py
@@ -375,5 +340,3 @@ if [[ "$BUILD_ENVIRONMENT" != *libtorch* && "$BUILD_ENVIRONMENT" != *bazel* ]]; 
   # don't do this for libtorch as libtorch is C++ only and thus won't have python tests run on its build
   python tools/stats/export_test_times.py
 fi
-
-print_sccache_stats
