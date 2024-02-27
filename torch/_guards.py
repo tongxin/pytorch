@@ -481,13 +481,14 @@ class GuardsSet:
     def __bool__(self):
         return bool(self.inner)
 
-    def add(self, guard: Guard, *, skip=0):
+    def add(self, guard: Guard, *, collect_debug_stack=True, skip=0):
         if guard in self.inner:
             return
-        if guard.stack is None:
-            guard.stack = CapturedTraceback.extract(skip=1 + skip)
-        if guard.user_stack is None:
-            guard.user_stack = TracingContext.extract_stack()
+        if collect_debug_stack:
+            if guard.stack is None:
+                guard.stack = CapturedTraceback.extract(skip=1 + skip)
+            if guard.user_stack is None:
+                guard.user_stack = TracingContext.extract_stack()
         self.inner.add(guard)
 
     def update(self, *others: Set[Guard]):
@@ -618,6 +619,11 @@ class TracingContext:
         # See note [Tensor Fakification and Symbol Caching]
         self.tensor_to_context = WeakTensorKeyDictionary()
 
+    def clear(self):
+        # Look at the note in output_graph.py in function `save_global_state`
+        # for the context on clearing global context.
+        self.global_context.global_state = {}
+
     @staticmethod
     @contextmanager
     def patch(**kwargs):
@@ -640,9 +646,9 @@ class TracingContext:
         self = TracingContext.try_get()
         if self is None:
             return traceback.StackSummary()
-        stack = list(self.frame_summary_stack)
+        stack = self.frame_summary_stack
         if self.loc_in_frame is not None:
-            stack.append(self.loc_in_frame)
+            stack = stack + [self.loc_in_frame]
         return traceback.StackSummary.from_list(stack)
 
     # Call this when you want to call into some code that isn't necessarily
