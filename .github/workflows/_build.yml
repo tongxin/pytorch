@@ -10,7 +10,7 @@ on:
       build-with-debug:
         required: false
         type: boolean
-        default: false
+        default: true
         description: If set, build in debug mode.
       cuda-arch-list:
         required: false
@@ -44,6 +44,7 @@ jobs:
       test-matrix: ${{ steps.filter.outputs.test-matrix }}
     steps:
       - name: Checkout
+        # Make sure enabling allow all actions/reusable workflows in the repos action setting 
         uses: actions/checkout@v4
 
       - name: Parse ref
