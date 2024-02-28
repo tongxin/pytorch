@@ -75,6 +75,7 @@ jobs:
           python -m venv --system-site-packages env
           source env/bin/activate
           echo "VIRTUAL ENV:" $VIRTUAL_ENV
+          export LD_LIBRARY_PATH=/opt/miniconda/lib
 
       - name: Test
         id: test
