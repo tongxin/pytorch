@@ -15,11 +15,6 @@ on:
         required: false
         type: boolean
         default: false
-      default:
-        description: Run inductor_default?
-        required: false
-        type: boolean
-        default: false
       dynamic:
         description: Run inductor_dynamic_shapes?
         required: false
@@ -43,12 +38,13 @@ concurrency:
 permissions: read-all
 
 jobs:
-  linux-focal-cuda12_1-py3_10-gcc9-inductor-build:
-    name: cuda12.1-py3.10-gcc9-sm80
+  linux-jammy-cuda12_1-py3_11-gcc11-inductor-build:
+    name: cuda12.1-py3.11-gcc11-sm80
     uses: ./.github/workflows/_build.yml
     with:
-      build-environment: linux-focal-cuda12.1-py3.10-gcc9-sm80
+      build-environment: linux-jammy-cuda12.1-py3.11-gcc9-sm80
       cuda-arch-list: '8.0'
+      build-with-debug: true
       test-matrix: |
         { include: [
           { config: "inductor_huggingface_perf", shard: 1, num_shards: 1, runner: "self-hosted" },
@@ -59,12 +55,12 @@ jobs:
     secrets:
       HUGGING_FACE_HUB_TOKEN: ${{ secrets.HUGGING_FACE_HUB_TOKEN }}
 
-  linux-focal-cuda12_1-py3_10-gcc9-inductor-test-nightly:
-    name: cuda12.1-py3.10-gcc9-sm80
+  linux-jammy-cuda12_1-py3_11-gcc11-inductor-test-nightly:
+    name: cuda12.1-py3.11-gcc11-sm80
     uses: ./.github/workflows/_linux-test.yml
-    needs: linux-focal-cuda12_1-py3_10-gcc9-inductor-build
+    needs: linux-jammy-cuda12_1-py3_11-gcc11-inductor-build
     with:
-      build-environment: linux-focal-cuda12.1-py3.10-gcc9-sm80
-      test-matrix: ${{ needs.linux-focal-cuda12_1-py3_10-gcc9-inductor-build.outputs.test-matrix }}
+      build-environment: linux-jammy-cuda12.1-py3.11-gcc11-sm80
+      test-matrix: ${{ needs.linux-jammy-cuda12_1-py3_11-gcc11-inductor-build.outputs.test-matrix }}
     secrets:
       HUGGING_FACE_HUB_TOKEN: ${{ secrets.HUGGING_FACE_HUB_TOKEN }}
