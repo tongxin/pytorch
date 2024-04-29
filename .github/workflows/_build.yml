@@ -53,6 +53,11 @@ jobs:
         id: parse-ref
         run: .github/scripts/parse_ref.py
 
+      - name: Update submodules
+        id: update-submodules
+        run: |
+          git submodule update --init --recursive
+
       - name: Get workflow job id
         id: get-job-id
         uses: ./.github/actions/get-workflow-job-id
