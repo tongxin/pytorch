@@ -74,7 +74,6 @@ jobs:
           BUILD_ENVIRONMENT: ${{ inputs.build-environment }}
           BRANCH: ${{ steps.parse-ref.outputs.branch }}
           # TODO duplicated
-          AWS_DEFAULT_REGION: us-east-1
           PR_NUMBER: ${{ github.event.pull_request.number }}
           SHA1: ${{ github.event.pull_request.head.sha || github.sha }}
           PR_LABELS: ${{ toJson(github.event.pull_request.labels.*.name) }}
