@@ -177,7 +177,7 @@ fi
 if [[ "$BUILD_ENVIRONMENT" == *cuda* ]] && [[ "$TORCH_CUDA_ARCH_LIST" == *"8.6"* || "$TORCH_CUDA_ARCH_LIST" == *"8.0"* ]]; then
   echo "WARNING: FlashAttention files require large amounts of memory to build and will OOM"
   echo "Setting MAX_JOBS=(nproc-2)/3 to reduce memory usage"
-  export MAX_JOBS="$(( $(nproc --ignore=2) / 3 ))"
+  [[ -z $MAX_JOBS ]] && export MAX_JOBS="$(( $(nproc --ignore=2) / 3 ))"
 fi
 
 if [[ "${BUILD_ENVIRONMENT}" == *clang* ]]; then
@@ -209,23 +209,6 @@ if [[ "${BUILD_ENVIRONMENT}" != *android* && "${BUILD_ENVIRONMENT}" != *cuda* ]]
   export BUILD_STATIC_RUNTIME_BENCHMARK=ON
 fi
 
-# Do not change workspace permissions for ROCm CI jobs
-# as it can leave workspace with bad permissions for cancelled jobs
-if [[ "$BUILD_ENVIRONMENT" != *rocm* ]]; then
-  # Workaround for dind-rootless userid mapping (https://github.com/pytorch/ci-infra/issues/96)
-  WORKSPACE_ORIGINAL_OWNER_ID=$(stat -c '%u' "/var/lib/jenkins/workspace")
-  cleanup_workspace() {
-    echo "sudo may print the following warning message that can be ignored. The chown command will still run."
-    echo "    sudo: setrlimit(RLIMIT_STACK): Operation not permitted"
-    echo "For more details refer to https://github.com/sudo-project/sudo/issues/42"
-    sudo chown -R "$WORKSPACE_ORIGINAL_OWNER_ID" /var/lib/jenkins/workspace
-  }
-  # Disable shellcheck SC2064 as we want to parse the original owner immediately.
-  # shellcheck disable=SC2064
-  trap_add cleanup_workspace EXIT
-  sudo chown -R jenkins /var/lib/jenkins/workspace
-  git config --global --add safe.directory /var/lib/jenkins/workspace
-fi
 
 if [[ "$BUILD_ENVIRONMENT" == *-bazel-* ]]; then
   set -e
