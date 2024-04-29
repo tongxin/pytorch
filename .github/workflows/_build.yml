@@ -46,6 +46,8 @@ jobs:
       - name: Checkout
         # Make sure enabling allow all actions/reusable workflows in the repos action setting 
         uses: actions/checkout@v4
+        with:
+          submodules: true
 
       - name: Parse ref
         id: parse-ref
