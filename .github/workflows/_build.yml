@@ -90,5 +90,6 @@ jobs:
           HUGGING_FACE_HUB_TOKEN: ${{ secrets.HUGGING_FACE_HUB_TOKEN }}
         run: |
           export MAX_JOBS=8
+          export LD_LIBRARY_PATH=/opt/miniconda3/lib/
           sh -c '.ci/pytorch/build.sh'
 
