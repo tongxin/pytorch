@@ -5,6 +5,11 @@ on:
     - cron: 0 16 * * 1,3,5
   workflow_dispatch:
     inputs:
+      build:
+        description: Build pytorch (off by default)?
+        required: false
+        type: boolean
+        default: false
       training:
         description: Run training (on by default)?
         required: false
@@ -40,6 +45,7 @@ permissions: read-all
 jobs:
   linux-jammy-cuda12_1-py3_11-gcc11-inductor-build:
     name: cuda12.1-py3.11-gcc11-sm80
+    if: inputs.build
     uses: ./.github/workflows/_build.yml
     with:
       build-environment: linux-jammy-cuda12.1-py3.11-gcc9-sm80
