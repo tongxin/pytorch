@@ -117,7 +117,8 @@ jobs:
             TEST_COMMAND=.ci/pytorch/test.sh
           fi
 
-          sh -c "pip install $(echo dist/*.whl)[opt-einsum] && ${TEST_COMMAND}"
+          # sh -c "pip install $(echo dist/*.whl)[opt-einsum] && ${TEST_COMMAND}"
+          sh -c "${TEST_COMMAND}"
 
       - name: Print remaining test logs
         shell: bash
@@ -133,9 +134,3 @@ jobs:
       #     MONITOR_SCRIPT_PID: ${{ steps.monitor-script.outputs.monitor-script-pid }}
       #   run: |
       #     kill "$MONITOR_SCRIPT_PID"
-
-      - name: Collect backtraces from coredumps (if any)
-        if: always()
-        run: |
-          # shellcheck disable=SC2156
-          find . -iname "core.[1-9]*" -exec docker exec "${DOCKER_CONTAINER_ID}" sh -c "gdb python {} -ex 'bt' -ex 'q'" \;
