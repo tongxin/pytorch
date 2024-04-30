@@ -1169,7 +1169,7 @@ endif()
 # script will fail. As a result, we will only provide the targets cmake
 # files for shared lib installation. For more info, read:
 # https://cmake.org/pipermail/cmake/2016-May/063400.html
-if(BUILD_CAFFE2 AND BUILD_SHARED_LIBS)
+if(BUILD_SHARED_LIBS)
   configure_file(
       ${PROJECT_SOURCE_DIR}/cmake/Caffe2Config.cmake.in
       ${PROJECT_BINARY_DIR}/Caffe2Config.cmake
