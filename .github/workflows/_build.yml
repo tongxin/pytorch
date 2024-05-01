@@ -3,6 +3,11 @@ name: build
 on:
   workflow_call:
     inputs:
+      build:
+        description: Build pytorch (off by default)?
+        required: false
+        type: boolean
+        default: false
       build-environment:
         required: true
         type: string
@@ -43,21 +48,6 @@ jobs:
     outputs:
       test-matrix: ${{ steps.filter.outputs.test-matrix }}
     steps:
-      - name: Checkout
-        # Make sure enabling allow all actions/reusable workflows in the repos action setting 
-        uses: actions/checkout@v4
-        with:
-          submodules: true
-
-      - name: Parse ref
-        id: parse-ref
-        run: .github/scripts/parse_ref.py
-
-      - name: Update submodules
-        id: update-submodules
-        run: |
-          git submodule update --init --recursive
-
       - name: Get workflow job id
         id: get-job-id
         uses: ./.github/actions/get-workflow-job-id
@@ -73,6 +63,22 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           test-matrix: ${{ inputs.test-matrix }}
           job-name: ${{ steps.get-job-id.outputs.job-name }}
+
+      - name: Checkout
+        if: ${{ inputs.build }}
+        # Make sure enabling allow all actions/reusable workflows in the repos action setting 
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Parse ref
+        id: parse-ref
+        run: .github/scripts/parse_ref.py
+
+      - name: Update submodules
+        id: update-submodules
+        run: |
+          git submodule update --init --recursive
 
       - name: Build
         if: steps.filter.outputs.is-test-matrix-empty == 'False' || inputs.test-matrix == ''
