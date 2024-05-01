@@ -43,30 +43,29 @@ concurrency:
 permissions: read-all
 
 jobs:
-  linux-jammy-cuda12_1-py3_11-gcc11-inductor-build:
-    name: cuda12.1-py3.11-gcc11-sm80
-    if: inputs.build
-    uses: ./.github/workflows/_build.yml
-    with:
-      build-environment: linux-jammy-cuda12.1-py3.11-gcc9-sm80
-      cuda-arch-list: '8.0'
-      build-with-debug: true
-      test-matrix: |
-        { include: [
-          { config: "inductor_huggingface_perf", shard: 1, num_shards: 1, runner: "self-hosted" },
-          { config: "inductor_timm_perf", shard: 1, num_shards: 1, runner: "self-hosted" },
-          { config: "inductor_torchbench_perf", shard: 1, num_shards: 1, runner: "self-hosted" },
-        ]}
-    secrets:
-      HUGGING_FACE_HUB_TOKEN: ${{ secrets.HUGGING_FACE_HUB_TOKEN }}
-
   linux-jammy-cuda12_1-py3_11-gcc11-inductor-test-nightly:
-    name: cuda12.1-py3.11-gcc11-sm80
-    uses: ./.github/workflows/_linux-test.yml
-    needs: linux-jammy-cuda12_1-py3_11-gcc11-inductor-build
-    if: ${{ always() }}
-    with:
-      build-environment: linux-jammy-cuda12.1-py3.11-gcc11-sm80
-      test-matrix: ${{ needs.linux-jammy-cuda12_1-py3_11-gcc11-inductor-build.outputs.test-matrix }}
-    secrets:
-      HUGGING_FACE_HUB_TOKEN: ${{ secrets.HUGGING_FACE_HUB_TOKEN }}
+    steps:
+      - name: build
+        if: ${{ inputs.build }}
+        uses: ./.github/workflows/_build.yml
+        with:
+          build-environment: linux-jammy-cuda12.1-py3.11-gcc11-sm80
+          cuda-arch-list: '8.0'
+          build-with-debug: true
+          test-matrix: |
+            { include: [
+              { config: "inductor_huggingface_perf", shard: 1, num_shards: 1, runner: "self-hosted" },
+              { config: "inductor_timm_perf", shard: 1, num_shards: 1, runner: "self-hosted" },
+              { config: "inductor_torchbench_perf", shard: 1, num_shards: 1, runner: "self-hosted" },
+            ]}
+          secrets:
+            HUGGING_FACE_HUB_TOKEN: ${{ secrets.HUGGING_FACE_HUB_TOKEN }}
+      - name: test
+        if: ${{ always() }}
+        uses: ./.github/workflows/_linux-test.yml
+        with:
+          build-environment: linux-jammy-cuda12.1-py3.11-gcc11-sm80
+          test-matrix: ${{ steps.build.outputs.test-matrix }}
+        secrets:
+          HUGGING_FACE_HUB_TOKEN: ${{ secrets.HUGGING_FACE_HUB_TOKEN }}
+      
