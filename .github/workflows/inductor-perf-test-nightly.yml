@@ -44,6 +44,8 @@ permissions: read-all
 
 jobs:
   linux-jammy-cuda12_1-py3_11-gcc11-inductor-test-nightly:
+    secrets:
+      HUGGING_FACE_HUB_TOKEN: ${{ secrets.HUGGING_FACE_HUB_TOKEN }}
     steps:
       - name: build
         if: ${{ inputs.build }}
@@ -58,14 +60,12 @@ jobs:
               { config: "inductor_timm_perf", shard: 1, num_shards: 1, runner: "self-hosted" },
               { config: "inductor_torchbench_perf", shard: 1, num_shards: 1, runner: "self-hosted" },
             ]}
-          secrets:
-            HUGGING_FACE_HUB_TOKEN: ${{ secrets.HUGGING_FACE_HUB_TOKEN }}
+
       - name: test
         if: ${{ always() }}
         uses: ./.github/workflows/_linux-test.yml
         with:
           build-environment: linux-jammy-cuda12.1-py3.11-gcc11-sm80
           test-matrix: ${{ steps.build.outputs.test-matrix }}
-        secrets:
-          HUGGING_FACE_HUB_TOKEN: ${{ secrets.HUGGING_FACE_HUB_TOKEN }}
+
       
