@@ -64,7 +64,7 @@ jobs:
     name: cuda12.1-py3.11-gcc11-sm80
     uses: ./.github/workflows/_linux-test.yml
     needs: linux-jammy-cuda12_1-py3_11-gcc11-inductor-build
-    if: always()
+    if: ${{ ! (contains(needs.*.result, 'skipped') || contains(needs.*.result, 'failure')) }}
     with:
       build-environment: linux-jammy-cuda12.1-py3.11-gcc11-sm80
       test-matrix: ${{ needs.linux-jammy-cuda12_1-py3_11-gcc11-inductor-build.outputs.test-matrix }}
