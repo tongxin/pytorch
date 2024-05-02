@@ -65,7 +65,6 @@ jobs:
           job-name: ${{ steps.get-job-id.outputs.job-name }}
 
       - name: Checkout
-        if: ${{ inputs.build }}
         # Make sure enabling allow all actions/reusable workflows in the repos action setting 
         uses: actions/checkout@v4
         with:
