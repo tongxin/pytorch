@@ -47,7 +47,7 @@ jobs:
     name: cuda12.1-py3.11-gcc11-sm80
     uses: ./.github/workflows/_build.yml
     with:
-      build-environment: linux-jammy-cuda12.1-py3.11-gcc11-sm80
+      build-environment: linux-jammy-cuda12.1-py3.11-gcc11-sm80-debug
       build: ${{ inputs.build }}
       cuda-arch-list: '8.0'
       build-with-debug: true
@@ -66,7 +66,7 @@ jobs:
     uses: ./.github/workflows/_linux-test.yml
     needs: linux-jammy-cuda12_1-py3_11-gcc11-inductor-build
     with:
-      build-environment: linux-jammy-cuda12.1-py3.11-gcc11-sm80
+      build-environment: linux-jammy-cuda12.1-py3.11-gcc11-sm80-debug
       test-matrix: ${{ needs.linux-jammy-cuda12_1-py3_11-gcc11-inductor-build.outputs.test-matrix }}
     secrets:
       HUGGING_FACE_HUB_TOKEN: ${{ secrets.HUGGING_FACE_HUB_TOKEN }}

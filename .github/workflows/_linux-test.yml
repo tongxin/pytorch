@@ -62,13 +62,13 @@ jobs:
       #     python3 -m tools.stats.monitor > usage_log.txt 2>&1 &
       #     echo "monitor-script-pid=${!}" >> "${GITHUB_OUTPUT}"
 
-      # - name: Set Test step time
-      #   id: test-timeout
-      #   shell: bash
-      #   env:
-      #     JOB_TIMEOUT: ${{ matrix.mem_leak_check == 'mem_leak_check' && 600 || inputs.timeout-minutes }}
-      #   run: |
-      #     echo "timeout=$((JOB_TIMEOUT-30))" >> "${GITHUB_OUTPUT}"
+      - name: Set Test step time
+        id: test-timeout
+        shell: bash
+        env:
+          JOB_TIMEOUT: ${{ matrix.mem_leak_check == 'mem_leak_check' && 600 || inputs.timeout-minutes }}
+        run: |
+          echo "timeout=$((JOB_TIMEOUT-30))" >> "${GITHUB_OUTPUT}"
 
       - name: Set up virtual env 
         run: |
