@@ -7,6 +7,10 @@ on:
         required: true
         type: string
         description: Top-level label for what's being built/tested.
+      dashboard-tag:
+        required: false
+        type: string
+        default: ""
       test-matrix:
         required: true
         type: string
@@ -104,6 +108,7 @@ jobs:
           SHM_SIZE: ${{ contains(inputs.build-environment, 'cuda') && '2g' || '1g' }}
           PYTORCH_TEST_CUDA_MEM_LEAK_CHECK: ${{ matrix.mem_leak_check && '1' || '0' }}
           PYTORCH_TEST_RERUN_DISABLED_TESTS: ${{ matrix.rerun_disabled_tests && '1' || '0' }}
+          DASHBOARD_TAG: ${{ inputs.dashboard-tag }}
           HUGGING_FACE_HUB_TOKEN: ${{ secrets.HUGGING_FACE_HUB_TOKEN }}
           LD_LIBRARY_PATH: /opt/miniconda3/lib/
 

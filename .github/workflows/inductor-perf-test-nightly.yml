@@ -67,6 +67,7 @@ jobs:
     needs: linux-jammy-cuda12_1-py3_11-gcc11-inductor-build
     with:
       build-environment: linux-jammy-cuda12.1-py3.11-gcc11-sm80-debug
+      dashboard-tag: training-true-inference-true-default-true-dynamic-true-cudagraphs-true-aotinductor-true-freezing_cudagraphs-true-cudagraphs_low_precision-true
       test-matrix: ${{ needs.linux-jammy-cuda12_1-py3_11-gcc11-inductor-build.outputs.test-matrix }}
     secrets:
       HUGGING_FACE_HUB_TOKEN: ${{ secrets.HUGGING_FACE_HUB_TOKEN }}
